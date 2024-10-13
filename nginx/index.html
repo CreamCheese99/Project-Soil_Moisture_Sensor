@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Sensor Data</title>
+    <title>ESP32 Sensor Data - Graph & Max Temperature</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Import Chart.js -->
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -14,7 +15,7 @@
             background: linear-gradient(135deg, #f8f9fa, #a8dadc);
             color: #343a40;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
         }
@@ -25,8 +26,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             padding: 30px;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 20px;
         }
         h1 {
             text-align: center;
@@ -35,117 +35,22 @@
             font-size: 2.5rem;
             text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
         }
-        .icon-container {
-            display: flex;
-            justify-content: center; 
-            margin-bottom: 30px;
+        canvas {
+            max-width: 100%;
         }
-        .icon {
-            font-size: 2.5rem;
-            color: #007bff;
-            margin: 0 125px; 
-            
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
-        }
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 20px;
+        .max-temp {
+            text-align: center;
             margin-top: 20px;
-            transition: 0.3s;
-            border-radius: 10px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            background-color: white;
-            position: relative;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        th i {
-            margin-right: 8px;
-        }
-        tbody tr {
-            transition: background-color 0.3s, transform 0.3s;
-        }
-        tbody tr:nth-child(odd) {
-            background-color: #e3f2fd;
-        }
-        tbody tr:nth-child(even) {
-            background-color: #f1f8ff;
-        }
-        tbody tr:hover {
-            background-color: #d1ecf1;
-            transform: scale(1.02);
-        }
-        td i {
-            margin-right: 8px;
-            color: #007bff;
-        }
-
-        @media (max-width: 600px) {
-            th, td {
-                display: block;
-                width: 100%;
-            }
-            th {
-                position: absolute;
-                left: -9999px;
-            }
-            tr {
-                margin-bottom: 20px;
-            }
-            td {
-                border: none;
-                position: relative;
-                padding-left: 50%;
-            }
-            td:before {
-                position: absolute;
-                left: 10px;
-                white-space: nowrap;
-                font-weight: bold;
-            }
+            font-size: 1.5rem;
+            color: #ff5733;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>ESP32 Sensor Data</h1>
-        <div class="icon-container">
-            <i class="fas fa-thermometer-half icon" title="Temperature"></i>
-            <i class="fas fa-water icon" title="Humidity"></i>
-            <i class="fas fa-clock icon" title="Timestamp"></i>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th><i class="fas fa-thermometer-half"></i>Temperature (°C)</th>
-                    <th><i class="fas fa-tint"></i>Humidity (%)</th>
-                    <th><i class="fas fa-clock"></i>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody id="data-table-body">
-                <!-- Data will be populated here -->
-            </tbody>
-        </table>
+        <h1>ESP32 Sensor Data - Humidity & Max Temperature</h1>
+        <canvas id="humidityChart"></canvas> <!-- Canvas for the Humidity Graph -->
+        <div class="max-temp" id="maxTempDisplay">Max Temperature: -- °C</div> <!-- Max Temp Display -->
     </div>
 
     <script>
@@ -156,21 +61,63 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-                const tableBody = document.getElementById('data-table-body');
-                tableBody.innerHTML = ''; // Clear existing rows
-
-                // Populate table with data
-                data.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><i class="fas fa-thermometer-half"></i>${item.temperature}</td>
-                        <td><i class="fas fa-tint"></i>${item.humidity}</td>
-                        <td><i class="fas fa-clock"></i>${new Date(item.timestamp).toLocaleString()}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                updateGraph(data);
+                displayMaxTemperature(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
+            }
+        }
+
+        // Function to update the Humidity Graph
+        function updateGraph(data) {
+            const labels = data.map(item => new Date(item.timestamp).toLocaleTimeString()); // Timestamps for X-axis
+            const humidityData = data.map(item => item.humidity); // Humidity values for Y-axis
+
+            const ctx = document.getElementById('humidityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        data: humidityData,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Humidity (%)'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to display the maximum temperature for the day
+        function displayMaxTemperature(data) {
+            const today = new Date().toLocaleDateString(); // Get today's date
+            const todayData = data.filter(item => new Date(item.timestamp).toLocaleDateString() === today); // Filter today's data
+
+            if (todayData.length > 0) {
+                const maxTemp = Math.max(...todayData.map(item => item.temperature)); // Find the max temperature
+                document.getElementById('maxTempDisplay').textContent = `Max Temperature: ${maxTemp} °C`;
+            } else {
+                document.getElementById('maxTempDisplay').textContent = 'No data for today';
             }
         }
 
