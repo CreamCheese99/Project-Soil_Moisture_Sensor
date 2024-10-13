@@ -1,128 +1,33 @@
+/*
+  ESP32 HTML WebServer Page Code
+  http:://www.electronicwings.com
+*/
+
+const char html_page[] PROGMEM = R"rawSrting(
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Sensor Data - Graph & Max Temperature</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Import Chart.js -->
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa, #a8dadc);
-            color: #343a40;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            max-width: 800px;
-            width: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            padding: 30px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #007bff;
-            margin-bottom: 20px;
-            font-size: 2.5rem;
-            text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
-        }
-        canvas {
-            max-width: 100%;
-        }
-        .max-temp {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 1.5rem;
-            color: #ff5733;
-        }
-    </style>
-</head>
+<html>
+  <style>
+    body {font-family: sans-serif;}
+    h1 {text-align: center; font-size: 30px;}
+    p {text-align: center; color: #4CAF50; font-size: 40px;}
+  </style>
+ 
 <body>
-    <div class="container">
-        <h1>ESP32 Sensor Data - Humidity & Max Temperature</h1>
-        <canvas id="humidityChart"></canvas> <!-- Canvas for the Humidity Graph -->
-        <div class="max-temp" id="maxTempDisplay">Max Temperature: -- °C</div> <!-- Max Temp Display -->
-    </div>
+  <h1>Soil Moisture With ESP32</h1><br>
+  <p>Moisture Level :<span id="MoistureVal">0</span>%</p><br>
 
-    <script>
-        // Function to fetch data from the Express API
-        async function fetchData() {
-            try {
-                const response = await fetch('/api/data'); // Endpoint of the Express API
-                if (!response.ok) throw new Error('Network response was not ok');
-
-                const data = await response.json();
-                updateGraph(data);
-                displayMaxTemperature(data);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
+  <script>
+    setInterval(function() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+         document.getElementById("MoistureVal").innerHTML = this.responseText;
         }
-
-        // Function to update the Humidity Graph
-        function updateGraph(data) {
-            const labels = data.map(item => new Date(item.timestamp).toLocaleTimeString()); // Timestamps for X-axis
-            const humidityData = data.map(item => item.humidity); // Humidity values for Y-axis
-
-            const ctx = document.getElementById('humidityChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Humidity (%)',
-                        data: humidityData,
-                        borderColor: '#007bff',
-                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Time'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Humidity (%)'
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 100
-                        }
-                    }
-                }
-            });
-        }
-
-        // Function to display the maximum temperature for the day
-        function displayMaxTemperature(data) {
-            const today = new Date().toLocaleDateString(); // Get today's date
-            const todayData = data.filter(item => new Date(item.timestamp).toLocaleDateString() === today); // Filter today's data
-
-            if (todayData.length > 0) {
-                const maxTemp = Math.max(...todayData.map(item => item.temperature)); // Find the max temperature
-                document.getElementById('maxTempDisplay').textContent = `Max Temperature: ${maxTemp} °C`;
-            } else {
-                document.getElementById('maxTempDisplay').textContent = 'No data for today';
-            }
-        }
-
-        // Call fetchData on page load
-        document.addEventListener('DOMContentLoaded', fetchData);
-    </script>
+      };
+      xhttp.open("GET", "readMoisture", true);
+      xhttp.send();
+    },50);
+  </script>
 </body>
 </html>
+)rawSrting";
