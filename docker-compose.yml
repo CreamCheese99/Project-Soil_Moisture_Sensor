@@ -2,7 +2,8 @@ version: '3'
 services:
   mongodb:
     image: mongo
-    container_name: mongodb
+    container_name: mongodb_new
+
     ports:
       - "27017:27017"
     volumes:
@@ -10,7 +11,7 @@ services:
 
   express:
     build: ./express  # ชี้ไปยังโฟลเดอร์ express ที่มี Dockerfile
-    container_name: express_app
+    container_name: express_app_new
     ports:
       - "3000:3000"
     depends_on:
@@ -20,7 +21,7 @@ services:
 
   nginx:
     build: ./nginx
-    container_name: nginx
+    container_name: nginx_new
     ports:
       - "80:80"
     depends_on:
