@@ -25,7 +25,7 @@
   </script>
 </body>
 </html> -->
-
+<!-- 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -164,14 +164,14 @@
         <table>
             <thead>
                 <tr>
-                   
+                  
                     <th><i class="fas fa-tint"></i>Moisture (%)</th>
                     <th><i class="fas fa-clock"></i>Timestamp</th>
                 </tr>
             </thead>
             <tbody id="data-table-body">
-                <!-- Data will be populated here -->
-            </tbody>
+                  Data will be populated here -->
+           <!-- </tbody>
         </table>
     </div>
 
@@ -204,5 +204,171 @@
         // Call fetchData on page load
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>
+</body> --> 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Moisture Sensor Data With ESP32</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #a8dadc);
+            color: #343a40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            text-align: center;
+            color: #C71585;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            text-align: center;
+            color: #88155e;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+        }
+        .icon-container {
+            display: flex;
+            justify-content: center; 
+            margin-bottom: 30px;
+        }
+        .icon {
+            font-size: 2.5rem;
+            color: #C71585;
+            margin: 0 125px; 
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 20px;
+            margin-top: 20px;
+            transition: 0.3s;
+            border-radius: 10px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: white;
+            position: relative;
+        }
+        th {
+            background-color: #C71585;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        th i {
+            margin-right: 8px;
+        }
+        tbody tr {
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #e3f2fd;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f1f8ff;
+        }
+        tbody tr:hover {
+            background-color: #d1ecf1;
+            transform: scale(1.02);
+        }
+        td i {
+            margin-right: 8px;
+            color: #C71585;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Soil Moisture Sensor </h1>
+        <h2>ระบบเเสดงค่าความชื้นในดิน</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th><i class="fas fa-calendar"></i>Date</th>
+                    <th><i class="fas fa-tint"></i>Moisture Max (%)</th>
+                    <th><i class="fas fa-tint"></i>Moisture Min (%)</th>
+                    <th><i class="fas fa-tint"></i>Moisture Avg (%)</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body">
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to fetch data from the Express API
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data'); // Endpoint of the Express API
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.json();
+                const tableBody = document.getElementById('data-table-body');
+                tableBody.innerHTML = ''; // Clear existing rows
+
+                // Group data by date and calculate max, min, and avg moisture per day
+                const groupedData = data.reduce((acc, item) => {
+                    const date = new Date(item.timestamp).toLocaleDateString();
+                    if (!acc[date]) {
+                        acc[date] = { moistureMax: item.moisture, moistureMin: item.moisture, moistureSum: 0, count: 0 };
+                    }
+                    if (item.moisture > acc[date].moistureMax) acc[date].moistureMax = item.moisture;
+                    if (item.moisture < acc[date].moistureMin) acc[date].moistureMin = item.moisture;
+                    acc[date].moistureSum += item.moisture;
+                    acc[date].count++;
+                    return acc;
+                }, {});
+
+                // Populate table with data
+                Object.keys(groupedData).forEach(date => {
+                    const { moistureMax, moistureMin, moistureSum, count } = groupedData[date];
+                    const moistureAvg = (moistureSum / count).toFixed(2); // Calculate average
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><i class="fas fa-calendar"></i>${date}</td>
+                        <td><i class="fas fa-tint"></i>${moistureMax}</td>
+                        <td><i class="fas fa-tint"></i>${moistureMin}</td>
+                        <td><i class="fas fa-tint"></i>${moistureAvg}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Call fetchData on page load
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
 </body>
 </html>
+
