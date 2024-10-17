@@ -55,38 +55,81 @@
 // });
 
 
+// const express = require('express');
+// const mongoose = require('mongoose');
+// const bodyParser = require('body-parser');
+
+// const app = express();
+// const port = 3000;
+
+// app.use(bodyParser.json());
+
+// // // เชื่อมต่อกับ MongoDB
+// // mongoose.connect('mongodb://localhost:27017/your_database', { useNewUrlParser: true, useUnifiedTopology: true });
+
+// // MongoDB Connection
+// const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/ESP32';
+// mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('MongoDB connected'))
+//   .catch(err => console.error('MongoDB connection error:', err));
+
+// const moistureSchema = new mongoose.Schema({
+//     moisture: Number,
+//     timestamp: { type: Date, default: Date.now }
+// });
+
+// const Moisture = mongoose.model('Moisture', moistureSchema);
+
+// app.post('/api/data', (req, res) => {
+//     const moistureData = new Moisture({ moisture: req.body.moisture });
+//     moistureData.save()
+//         .then(() => res.status(201).send('Data saved'))
+//         .catch(err => res.status(500).send(err));
+// });
+
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
-const port = 3000;
-
+app.use(cors());
 app.use(bodyParser.json());
 
-// // เชื่อมต่อกับ MongoDB
-// mongoose.connect('mongodb://localhost:27017/your_database', { useNewUrlParser: true, useUnifiedTopology: true });
-
-// MongoDB Connection
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/ESP32';
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(mongoURI);
 
 const moistureSchema = new mongoose.Schema({
     moisture: Number,
     timestamp: { type: Date, default: Date.now }
 });
 
-const Moisture = mongoose.model('Moisture', moistureSchema);
+const Data = mongoose.model('Data', moistureSchema);
 
-app.post('/api/data', (req, res) => {
-    const moistureData = new Moisture({ moisture: req.body.moisture });
-    moistureData.save()
-        .then(() => res.status(201).send('Data saved'))
-        .catch(err => res.status(500).send(err));
+app.post('/api/data', async (req, res) => {
+  const newData = new Data(req.body);
+  try {
+    await newData.save();
+    res.status(200).send('Data saved');
+  } catch (err) {
+    res.status(500).send(err);
+  }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+app.get('/api/data', async (req, res) => {
+  try {
+    const data = await Data.find().sort({ timestamp: -1 }).limit(10);
+    res.json(data);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
 });

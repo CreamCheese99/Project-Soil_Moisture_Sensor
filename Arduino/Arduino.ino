@@ -6,7 +6,7 @@ const int sensor_pin = A0;  // Soil moisture sensor O/P pin
 
 const char* ssid = "Creamcheese";         // Enter your SSID
 const char* password = "cccccccc"; // Enter your password
-const char* serverURL = "http://http://172.20.10.5:3000/api/data"; // Server URL to send data
+const char* serverURL = "http://172.20.10.5:3000/api/data"; // Server URL to send data
 
 void setup() {
   Serial.begin(115200);  // Set the baudrate to 115200
