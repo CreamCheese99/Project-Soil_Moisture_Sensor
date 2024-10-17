@@ -1,1 +1,24 @@
 show dbs
+net stop MongoDB
+db.test.find()
+db.yourCollectionName.find()
+use test
+use esp32
+ESP32
+show dbs
+net stop MongoDB
+show dbs
+my database
+use test
+use mydatabase
+my database
+mongosh
+show dbs
+db
+mongodb
+$ docker run -it --network some-network --rm mongo mongosh --host some-mongo test
+data
+datas
+mongosh
+mongodb
+show dbs

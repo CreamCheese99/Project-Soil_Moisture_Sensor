@@ -260,6 +260,12 @@
             color: #C71585;
             margin: 0 125px; 
         }
+        .current-moisture {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #007bff;
+        }
         table {
             width: 100%;
             border-collapse: separate;
@@ -306,8 +312,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>Soil Moisture Sensor </h1>
+        <h1>Soil Moisture Sensor</h1>
         <h2>ระบบเเสดงค่าความชื้นในดิน</h2>
+        
+        <!-- แสดงค่าความชื้นปัจจุบัน -->
+        <div class="current-moisture">
+            ความชื้นปัจจุบัน: <span id="current-moisture-value">--</span> %
+        </div>
+        
         <table>
             <thead>
                 <tr>
@@ -332,6 +344,8 @@
 
                 const data = await response.json();
                 const tableBody = document.getElementById('data-table-body');
+                const currentMoistureValue = document.getElementById('current-moisture-value');
+                
                 tableBody.innerHTML = ''; // Clear existing rows
 
                 // Group data by date and calculate max, min, and avg moisture per day
@@ -361,6 +375,12 @@
                     `;
                     tableBody.appendChild(row);
                 });
+
+                // Update current moisture value (the latest moisture value)
+                if (data.length > 0) {
+                    const latestMoisture = data[data.length - 1].moisture;
+                    currentMoistureValue.textContent = latestMoisture;
+                }
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -371,4 +391,5 @@
     </script>
 </body>
 </html>
+
 

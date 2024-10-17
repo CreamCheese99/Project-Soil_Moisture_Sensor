@@ -44,7 +44,7 @@ void loop() {
     Serial.println("WiFi not connected");
   }
 
-  delay(60000);  // Wait 1 minute before next reading
+  delay(300000);  // Wait 5 minute before next reading
 }
 
 void sendDataToServer(int moisture) {
