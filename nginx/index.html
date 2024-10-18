@@ -205,7 +205,6 @@
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>
 </body> --> 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -238,14 +237,14 @@
         }
         h1 {
             text-align: center;
-            color: #C71585;
+            color: #18a299;
             margin-bottom: 20px;
             font-size: 2.5rem;
             text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
         }
         h2 {
             text-align: center;
-            color: #88155e;
+            color:#9a5d0e;
             margin-bottom: 20px;
             font-size: 1.5rem;
             text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
@@ -257,14 +256,14 @@
         }
         .icon {
             font-size: 2.5rem;
-            color: #C71585;
-            margin: 0 125px; 
+            color: #18a299;
+            margin: 0 125px;
         }
         .current-moisture {
             text-align: center;
             margin-bottom: 20px;
             font-size: 1.5rem;
-            color: #007bff;
+            color: #0d6467;
         }
         table {
             width: 100%;
@@ -283,7 +282,7 @@
             position: relative;
         }
         th {
-            background-color: #C71585;
+            background-color: #18a299;
             color: white;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -306,7 +305,7 @@
         }
         td i {
             margin-right: 8px;
-            color: #C71585;
+            color: #18a299;
         }
     </style>
 </head>
@@ -348,8 +347,18 @@
                 
                 tableBody.innerHTML = ''; // Clear existing rows
 
-                // Group data by date and calculate max, min, and avg moisture per day
-                const groupedData = data.reduce((acc, item) => {
+                // Filter data for the last 7 days
+                const now = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(now.getDate() - 7);
+
+                const filteredData = data.filter(item => {
+                    const itemDate = new Date(item.timestamp);
+                    return itemDate >= sevenDaysAgo && itemDate <= now;
+                });
+
+                // Group filtered data by date and calculate max, min, and avg moisture per day
+                const groupedData = filteredData.reduce((acc, item) => {
                     const date = new Date(item.timestamp).toLocaleDateString();
                     if (!acc[date]) {
                         acc[date] = { moistureMax: item.moisture, moistureMin: item.moisture, moistureSum: 0, count: 0 };
@@ -377,8 +386,8 @@
                 });
 
                 // Update current moisture value (the latest moisture value)
-                if (data.length > 0) {
-                    const latestMoisture = data[data.length - 1].moisture;
+                if (filteredData.length > 0) {
+                    const latestMoisture = filteredData[filteredData.length - 1].moisture;
                     currentMoistureValue.textContent = latestMoisture;
                 }
             } catch (error) {
@@ -391,5 +400,3 @@
     </script>
 </body>
 </html>
-
-
